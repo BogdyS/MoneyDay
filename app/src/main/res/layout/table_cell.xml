@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="110dp"
+    android:layout_height="110dp"
+    android:id="@+id/cell">
+
+    <ImageButton
+        android:id="@+id/category_button"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginLeft="25dp"
+        android:background="@drawable/plus"
+        tools:ignore="SpeakableTextPresentCheck" />
+
+    <TextView
+        android:id="@+id/category_text"
+        android:layout_width="110dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="0dp"
+        android:gravity="center"
+        android:text="TextView" />
+</LinearLayout>
