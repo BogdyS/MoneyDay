@@ -83,7 +83,6 @@ public class ExpensesFragment extends Fragment {
         for (int i = 0; i < categoriesList.size() + 1; i+=3){
             TableRow tableRow = new TableRow(getContext());
             for (int j = 0; j < 3; j++){
-                Log.i("!E#@!", Integer.toString(i+j));
                 if (i + j > categoriesList.size()) break;
                 if (i + j == categoriesList.size()){
                     Log.i("!E#@!", "done");
@@ -100,6 +99,7 @@ public class ExpensesFragment extends Fragment {
                 TextView textView = v.findViewById(R.id.category_text);
                 textView.setText(categoriesList.get(i+j));
                 ImageButton imageButton = v.findViewById(R.id.category_button);
+                imageButton.setBackground(getResources().getDrawable(R.drawable.apple));
                 imageButton.setOnClickListener(categoryButton -> {
                     if (lastSelected != null){
                         lastSelected.setBackgroundColor(Color.TRANSPARENT);

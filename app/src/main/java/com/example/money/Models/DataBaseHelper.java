@@ -6,8 +6,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
+
+import com.example.money.R;
 
 import java.util.ArrayList;
 
@@ -15,33 +18,34 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     //region DBParams
     public static final String DATABASE_NAME = "application.db";
     public static final String TABLE_NAME = "transactions";
-    public static final String KEY_DATE = "date";
-    public static final String KEY_CATEGORY = "category_id";
-    public static final int DATABASE_VERSION = 4;
-    public static final String KEY_ID = "_id";
-    public static final String KEY_VALUE = "value";
+    public static final int DATABASE_VERSION = 5;
     public static final String CATEGORY_TABLE = "categories";
     public static final String INCOME_TABLE = "income";
     //endregion
 
     //region DefaultParams
-    private final String[] baseCategory = {"Транспорт", "Спорт", "Еда", "Автомобиль", "<Неизвестная категория>"};
-    private final String[] baseIncome = {"Зарплата", "Чаевые", "<Неизвестная категория>"};
+    private final String[] baseExpenses = {"Транспорт", "Спорт", "Еда", "Автомобиль"};
+    private final Integer[] ExpensePictureId = {R.drawable.transport, R.drawable.fitness, R.drawable.apple,
+            R.drawable.transport, R.drawable.plus};
+    private final String[] baseIncomes = {"Зарплата", "Чаевые"};
+    private final Integer[] IncomePictureId = {R.drawable.moneybag, R.drawable.cashpayment};
     //endregion
 
     //region Default Input
-    private void inputBasedCategories(SQLiteDatabase db){
-        for (String s : baseCategory) {
+    private void inputBaseExpenses(SQLiteDatabase db){
+        for (int i = 0; i < baseExpenses.length ; i++) {
             ContentValues contentValues = new ContentValues();
-            contentValues.put(KEY_VALUE, s);
-            db.insert(CATEGORY_TABLE, null, contentValues);
+            contentValues.put("value", baseExpenses[i]);
+            contentValues.put("picture_id", ExpensePictureId[i]);
+            db.insert("expenses", null, contentValues);
         }
     }
-    private void inputBasedIncome(SQLiteDatabase db){
-        for (String s : baseIncome) {
+    private void inputBaseIncome(SQLiteDatabase db){
+        for (int i = 0; i < baseIncomes.length; i++) {
             ContentValues contentValues = new ContentValues();
-            contentValues.put(KEY_VALUE, s);
-            db.insert(INCOME_TABLE, null, contentValues);
+            contentValues.put("value", baseIncomes[i]);
+            contentValues.put("picture_id", IncomePictureId[i]);
+            db.insert("incomes", null, contentValues);
         }
     }
     //endregion
@@ -54,35 +58,39 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         //Transactions table
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " (" + KEY_ID + " INTEGER PRIMARY KEY, "
-                + KEY_VALUE + " INTEGER, " + KEY_DATE + " TEXT, " + KEY_CATEGORY + " INTEGER)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS transactions " +
+                "(id INTEGER PRIMARY KEY, value INTEGER, date TEXT,category_id INTEGER)");
         //ExpensesCategoryTable
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + CATEGORY_TABLE + " (" + KEY_ID + " INTEGER PRIMARY KEY, "
-         + KEY_VALUE + " TEXT)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS expenses " +
+                "(id INTEGER PRIMARY KEY, value TEXT, picture_id INTEGER)");
         //IncomeCategory table
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + INCOME_TABLE + " (" + KEY_ID + " INTEGER PRIMARY KEY, "
-                    + KEY_VALUE + " TEXT)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS incomes " +
+                "(id INTEGER PRIMARY KEY, value TEXT, picture_id INTEGER)");
         //region DefaultInput
-        @SuppressLint("Recycle") Cursor cur = db.rawQuery("SELECT * FROM " + CATEGORY_TABLE, null);
+        //region Expenses
+        @SuppressLint("Recycle") Cursor cur = db.rawQuery("SELECT * FROM expenses", null);
         if (cur == null) {
-            inputBasedCategories(db);
+            inputBaseExpenses(db);
         }
         else {
             cur.moveToFirst();
             if (cur.getCount() == 0) {
-                inputBasedCategories(db);
+                inputBaseExpenses(db);
             }
         }
-        cur = db.rawQuery("SELECT * FROM " + INCOME_TABLE, null);
+        //endregion
+        //region Incomes
+        cur = db.rawQuery("SELECT * FROM incomes", null);
         if (cur == null){
-            inputBasedIncome(db);
+            inputBaseIncome(db);
         }
         else {
             cur.moveToFirst();
             if (cur.getCount() == 0){
-                inputBasedIncome(db);
+                inputBaseIncome(db);
             }
         }
+        //endregion
         //endregion
     }
     //TODO:try to write Normal Update
@@ -101,39 +109,61 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         Cursor c;
         if (transaction.getValue() <= 0){
-            c = getReadableDatabase().rawQuery("SELECT * FROM " + DataBaseHelper.CATEGORY_TABLE +
-                    " WHERE " + DataBaseHelper.KEY_VALUE + " = ?", new String[]{transaction.getCategory()});
+            c = getReadableDatabase().rawQuery(
+                    "SELECT * FROM expenses WHERE value = ?",
+                    new String[]{transaction.getCategory()});
         }
         else {
-            c = getReadableDatabase().rawQuery("SELECT * FROM " + DataBaseHelper.INCOME_TABLE +
-                    " WHERE " + DataBaseHelper.KEY_VALUE + " = ?", new String[]{transaction.getCategory()});
+            c = getReadableDatabase().rawQuery(
+                    "SELECT * FROM incomes WHERE value = ?",
+                    new String[]{transaction.getCategory()});
         }
-        values.put(DataBaseHelper.KEY_DATE, transaction.getDate());
-        values.put(DataBaseHelper.KEY_VALUE, transaction.getValue());
+        values.put("date", transaction.getDate());
+        values.put("value", transaction.getValue());
         c.moveToFirst();
-        values.put(DataBaseHelper.KEY_CATEGORY, c.getInt(0));
-        getWritableDatabase().insert(DataBaseHelper.TABLE_NAME, null, values);
+        values.put("category_id", c.getInt(0));
+        getWritableDatabase().insert("transactions", null, values);
     }
     public void deleteTransaction (@NonNull Transaction transaction){
-        getWritableDatabase().delete(DataBaseHelper.TABLE_NAME, "value = ? and date = ?",
-                new String[]{Integer.toString(transaction.getValue()), transaction.getDate()});
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor c;
+        if (transaction.getValue() > 0){
+            Log.i("!@#$", transaction.getCategory());
+            c = db.rawQuery(
+                    "SELECT id FROM incomes WHERE value = ?"
+                    , new String[]{transaction.getCategory()});
+        }
+        else{
+            Log.i("!@#$", transaction.getCategory());
+            c = db.rawQuery(
+                    "SELECT * FROM expenses WHERE value = ?"
+                    , new String[]{transaction.getCategory()});
+        }
+        c.moveToFirst();
+        int id = c.getInt(0);
+        getWritableDatabase().execSQL("DELETE FROM transactions WHERE (value = " + transaction.getValue() +") " +
+                "and (date = " + transaction.getDate() + ") " +
+                "and (category_id = " + id + ")");
+        getWritableDatabase().delete(
+                "transactions", "value = ? and date = ? and category_id = ?",
+                new String[]{Integer.toString(transaction.getValue()), transaction.getDate(), Integer.toString(id)});
     }
     @SuppressLint("Recycle")
     public ArrayList<Transaction> getAllTransactions(){
         ArrayList<Transaction> transactions = new ArrayList<>();
-        @SuppressLint("Recycle") Cursor cursor = getReadableDatabase().rawQuery("SELECT * FROM "+ DataBaseHelper.TABLE_NAME, null);
+        @SuppressLint("Recycle") Cursor cursor = getReadableDatabase().rawQuery("SELECT * FROM transactions", null);
         while (cursor.moveToNext()){
             Transaction transaction = new Transaction();
             transaction.setValue(cursor.getInt(1));
             transaction.setDate(cursor.getString(2));
             Cursor cursor1;
             if (transaction.getValue() <= 0){
-                cursor1 = getReadableDatabase().rawQuery("SELECT * FROM " + DataBaseHelper.CATEGORY_TABLE +
-                        " WHERE " + DataBaseHelper.KEY_ID + " = ?", new String[]{cursor.getString(3)});
+                cursor1 = getReadableDatabase().rawQuery("SELECT * FROM expenses WHERE id = ?",
+                        new String[]{cursor.getString(3)});
             }
             else{
-                cursor1 = getReadableDatabase().rawQuery("SELECT * FROM " + DataBaseHelper.INCOME_TABLE +
-                        " WHERE " + DataBaseHelper.KEY_ID + " = ?", new String[]{cursor.getString(3)});
+                cursor1 = getReadableDatabase().rawQuery("SELECT * FROM incomes WHERE id = ?",
+                        new String[]{cursor.getString(3)});
             }
             cursor1.moveToFirst();
             transaction.setCategory(cursor1.getString(1));
@@ -142,12 +172,12 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         return transactions;
     }
     public int getCountOfTransactions(){
-        @SuppressLint("Recycle") Cursor cursor = getReadableDatabase().rawQuery("SELECT * FROM " + DataBaseHelper.TABLE_NAME, null);
+        @SuppressLint("Recycle") Cursor cursor = getReadableDatabase().rawQuery("SELECT * FROM transactions", null);
         return cursor.getCount();
     }
     public void dropDataBase(){
         SQLiteDatabase db = getWritableDatabase();
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS transactions");
         onCreate(db);
     }
     //endregion
@@ -155,9 +185,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     //region getters
     //Is Transactions DB dropped
     public boolean isDropped() {
-        @SuppressLint("Recycle") Cursor cur = getReadableDatabase().rawQuery("SELECT COUNT(*) FROM " + TABLE_NAME, null);
+        @SuppressLint("Recycle") Cursor cur = getReadableDatabase().rawQuery(
+                "SELECT COUNT(*) FROM transactions", null);
         if (cur != null) {
-            cur.moveToFirst();                       // Always one row returned.
+            cur.moveToFirst();
             return cur.getInt(0) == 0;
         }
         return true;
@@ -165,7 +196,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     //Get all Expenses from DB
     public ArrayList<String> expensesCategories(){
-        @SuppressLint("Recycle") Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + CATEGORY_TABLE, null);
+        @SuppressLint("Recycle") Cursor cursor = getWritableDatabase().rawQuery(
+                "SELECT * FROM expenses", null);
         ArrayList<String> list = new ArrayList<>();
         while (cursor.moveToNext()){
             String data = cursor.getString(1);
@@ -176,7 +208,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     //Get all Incomes from DB
     public ArrayList<String> incomeCategories(){
-        @SuppressLint("Recycle") Cursor cursor = getWritableDatabase().rawQuery("SELECT * FROM " + INCOME_TABLE, null);
+        @SuppressLint("Recycle") Cursor cursor = getWritableDatabase().rawQuery(
+                "SELECT * FROM incomes", null);
         ArrayList<String> list = new ArrayList<>();
         while (cursor.moveToNext()){
             String data = cursor.getString(1);

@@ -39,9 +39,12 @@ public class MyAdapter extends ArrayAdapter<Transaction> {
                 Transaction transaction = new Transaction();
                 transaction.setValue(Integer.parseInt(columnValue.getText().toString()));
                 transaction.setDate(columnDate.getText().toString());
+                transaction.setCategory(columnCategory.getText().toString());
                 MoneyController.getInstance().deleteTransaction(transaction);
                 for (int i =0; i < list.size(); i++){
-                    if ((list.get(i).getDate().equals(transaction.getDate()))&&(list.get(i).getValue() == transaction.getValue())){
+                    if ((list.get(i).getDate().equals(transaction.getDate()))&&
+                            (list.get(i).getValue() == transaction.getValue())&&
+                            (list.get(i).getCategory() == transaction.getCategory())){
                         list.remove(i);
                         notifyDataSetChanged();
                         break;
