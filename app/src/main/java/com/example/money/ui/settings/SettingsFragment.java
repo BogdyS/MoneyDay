@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
+import com.example.money.Models.DataBaseHelper;
 import com.example.money.Models.MoneyController;
 import com.example.money.R;
 
@@ -31,5 +32,12 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             return true;
         });
         if (MoneyController.getInstance().isDroppedDatabase()) button.setEnabled(false);
+        Preference button2 = findPreference(getString(R.string.ClearAllDataButton));
+        assert button2 != null;
+        button.setOnPreferenceClickListener(preference -> {
+            DataBaseHelper db = new DataBaseHelper(getContext());
+            db.dropAll();
+            return true;
+        });
     }
 }

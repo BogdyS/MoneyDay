@@ -1,5 +1,6 @@
 package com.example.money.ui.adding;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
@@ -21,6 +22,7 @@ import com.example.money.Models.DataBaseHelper;
 import com.example.money.Models.MoneyController;
 import com.example.money.Models.Transaction;
 import com.example.money.R;
+import com.example.money.ui.MoreCategoriesActivity;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.text.SimpleDateFormat;
@@ -75,10 +77,21 @@ public class IncomeFragment extends Fragment {
         //region Categories
         ArrayList<String> incomeList = (new DataBaseHelper(getContext())).incomeCategories();
         LayoutInflater inflater = getLayoutInflater();
+        DataBaseHelper db = new DataBaseHelper(getContext());
         for (int i = 0; i < incomeList.size(); i+=3){
             TableRow tableRow = new TableRow(getContext());
             for (int j = 0; j < 3; j++){
-                if (i + j >= incomeList.size()) break;
+                if (i + j > incomeList.size()) break;
+                if (i + j == incomeList.size()){
+                    View moreCategories = inflater.inflate(R.layout.table_cell, tableRow, false);
+                    ((TextView)moreCategories.findViewById(R.id.category_text)).setText("Другое...");
+                    ((ImageButton)moreCategories.findViewById(R.id.category_button)).setOnClickListener((curView) -> {
+                        Intent intent = new Intent(getContext(), MoreCategoriesActivity.class);
+                        startActivity(intent);
+                    });
+                    tableRow.addView(moreCategories);
+                    break;
+                }
                 View v = inflater.inflate(R.layout.table_cell, tableRow, false);
                 TextView textView = v.findViewById(R.id.category_text);
                 textView.setText(incomeList.get(i+j));
@@ -91,6 +104,7 @@ public class IncomeFragment extends Fragment {
                     categoryButton.setPressed(true);
                     lastSelected.setBackgroundColor(Color.GRAY);
                 });
+                imageButton.setBackground(getResources().getDrawable(db.getIncomePictureId(incomeList.get(i+j))));
                 v.setOnClickListener(cell -> {
                     if (lastSelected != null){
                         lastSelected.setBackgroundColor(Color.TRANSPARENT);

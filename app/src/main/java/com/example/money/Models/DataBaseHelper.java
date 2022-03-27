@@ -17,15 +17,12 @@ import java.util.ArrayList;
 public class DataBaseHelper extends SQLiteOpenHelper {
     //region DBParams
     public static final String DATABASE_NAME = "application.db";
-    public static final String TABLE_NAME = "transactions";
-    public static final int DATABASE_VERSION = 5;
-    public static final String CATEGORY_TABLE = "categories";
-    public static final String INCOME_TABLE = "income";
+    public static final int DATABASE_VERSION = 6;
     //endregion
 
     //region DefaultParams
     private final String[] baseExpenses = {"Транспорт", "Спорт", "Еда", "Автомобиль"};
-    private final Integer[] ExpensePictureId = {R.drawable.transport, R.drawable.fitness, R.drawable.apple,
+    private final Integer[] ExpensePictureId = {R.drawable.vehicles, R.drawable.fitness, R.drawable.apple,
             R.drawable.transport, R.drawable.plus};
     private final String[] baseIncomes = {"Зарплата", "Чаевые"};
     private final Integer[] IncomePictureId = {R.drawable.moneybag, R.drawable.cashpayment};
@@ -37,6 +34,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
             ContentValues contentValues = new ContentValues();
             contentValues.put("value", baseExpenses[i]);
             contentValues.put("picture_id", ExpensePictureId[i]);
+            Log.i("DATA",Integer.toString(ExpensePictureId[i]) + " " + baseExpenses[i]);
             db.insert("expenses", null, contentValues);
         }
     }
@@ -96,9 +94,9 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     //TODO:try to write Normal Update
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-          db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
-          db.execSQL("DROP TABLE IF EXISTS " + INCOME_TABLE);
-          db.execSQL("DROP TABLE IF EXISTS " + CATEGORY_TABLE);
+          db.execSQL("DROP TABLE IF EXISTS transactions");
+          db.execSQL("DROP TABLE IF EXISTS incomes");
+          db.execSQL("DROP TABLE IF EXISTS expenses");
           onCreate(db);
     }
     //endregion
@@ -179,6 +177,25 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         db.execSQL("DROP TABLE IF EXISTS transactions");
         onCreate(db);
+    }
+    public void dropAll() {
+        SQLiteDatabase db = getWritableDatabase();
+        db.execSQL("DROP TABLE IF EXISTS transactions");
+        db.execSQL("DROP TABLE IF EXISTS incomes");
+        db.execSQL("DROP TABLE IF EXISTS expenses");
+        onCreate(db);
+    }
+    public int getExpensePictureId(String categoryName){
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT picture_id FROM expenses WHERE value = ?", new String[]{categoryName});
+        cursor.moveToFirst();
+        return cursor.getInt(0);
+    }
+    public int getIncomePictureId(String categoryName){
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT picture_id FROM incomes WHERE value = ?", new String[]{categoryName});
+        cursor.moveToFirst();
+        return cursor.getInt(0);
     }
     //endregion
 

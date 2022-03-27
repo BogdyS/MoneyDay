@@ -78,6 +78,7 @@ public class ExpensesFragment extends Fragment {
         TableLayout tableCategories = view.findViewById(R.id.table_categories);
         //endregion
         //region Categories
+        DataBaseHelper db = new DataBaseHelper(getContext());
         ArrayList<String> categoriesList = (new DataBaseHelper(getContext())).expensesCategories();
         LayoutInflater inflater = getLayoutInflater();
         for (int i = 0; i < categoriesList.size() + 1; i+=3){
@@ -85,7 +86,6 @@ public class ExpensesFragment extends Fragment {
             for (int j = 0; j < 3; j++){
                 if (i + j > categoriesList.size()) break;
                 if (i + j == categoriesList.size()){
-                    Log.i("!E#@!", "done");
                     View moreCategories = inflater.inflate(R.layout.table_cell, tableRow, false);
                     ((TextView)moreCategories.findViewById(R.id.category_text)).setText("Другое...");
                     ((ImageButton)moreCategories.findViewById(R.id.category_button)).setOnClickListener((curView) -> {
@@ -99,7 +99,8 @@ public class ExpensesFragment extends Fragment {
                 TextView textView = v.findViewById(R.id.category_text);
                 textView.setText(categoriesList.get(i+j));
                 ImageButton imageButton = v.findViewById(R.id.category_button);
-                imageButton.setBackground(getResources().getDrawable(R.drawable.apple));
+                Log.i("!@#$", categoriesList.get(i+j));
+                imageButton.setBackground(getResources().getDrawable(db.getExpensePictureId(categoriesList.get(i+j))));
                 imageButton.setOnClickListener(categoryButton -> {
                     if (lastSelected != null){
                         lastSelected.setBackgroundColor(Color.TRANSPARENT);

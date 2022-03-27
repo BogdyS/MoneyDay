@@ -4,4 +4,7 @@
     <Preference android:title="@string/ClearHistoryButton"
         android:key="@string/ClearHistoryButton"
         android:summary="Удалить все действия"/>
+    <Preference android:title="@string/ClearAllDataButton"
+        android:key="@string/ClearAllDataButton"
+        android:summary="Удалить все действия и категории"/>
 </PreferenceScreen>
